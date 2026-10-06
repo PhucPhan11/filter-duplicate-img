@@ -36,6 +36,21 @@ class _Thumbnail(QLabel):
         self.double_clicked.emit()
 
 
+class _CardScrollArea(QScrollArea):
+    """Scrolls sideways with Shift+wheel like Explorer, or with the plain wheel when nothing scrolls vertically."""
+
+    def wheelEvent(self, event) -> None:
+        delta = event.angleDelta().y()
+        shift = bool(event.modifiers() & Qt.KeyboardModifier.ShiftModifier)
+        if delta and (shift or self.verticalScrollBar().maximum() == 0):
+            bar = self.horizontalScrollBar()
+            # One wheel notch (120 units) moves three scrollbar steps, as vertical scrolling does.
+            bar.setValue(bar.value() - round(delta / 120 * 3 * bar.singleStep()))
+            event.accept()
+        else:
+            super().wheelEvent(event)
+
+
 class ImageCard(QFrame):
     remove_toggled = Signal(object, bool)  # Path, marked for removal
 
@@ -103,7 +118,8 @@ class GroupView(QWidget):
         header.addWidget(self._title, 1)
         header.addWidget(self._keep_all)
 
-        self._scroll = QScrollArea()
+        self._scroll = _CardScrollArea()
+        self._scroll.horizontalScrollBar().setSingleStep(40)
         self._scroll.setWidgetResizable(True)
 
         layout = QVBoxLayout(self)
