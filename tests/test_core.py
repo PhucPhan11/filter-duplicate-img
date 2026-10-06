@@ -2,7 +2,9 @@ from pathlib import Path
 
 import pytest
 
-from dupimg.core import actions, pipeline
+import io
+
+from dupimg.core import actions, hashing, pipeline
 from dupimg.core.cache import HashCache
 from dupimg.core.grouping import BKTree, build_groups, hamming
 from dupimg.core.hashing import HashedImage, hash_file, perceptual_hash
@@ -56,6 +58,24 @@ def test_exif_rotated_image_reports_upright_dimensions(library):
 def test_hash_file_reports_errors_instead_of_raising(library):
     *_, error = hash_file(str(library["broken"]), need_sha=True)
     assert error
+
+
+def test_raw_files_are_scanned_and_hashed_from_their_embedded_preview(library, monkeypatch):
+    raw = library["root"] / "shot.ARW"
+    raw.write_bytes(b"raw sensor data")
+    assert raw in {file.path for file in scan([library["root"]])}
+
+    # Stand in for LibRaw: the preview is the sideways JPEG, the sensor is bigger.
+    preview = library["rotated"].read_bytes()
+    monkeypatch.setattr(hashing, "_raw_preview", lambda source: (io.BytesIO(preview), (6000, 4000)))
+    for data in (None, raw.read_bytes()):
+        phash, width, height = perceptual_hash(raw, data)
+        assert (width, height) == (6000, 4000)
+        assert hamming(phash, perceptual_hash(library["base"])[0]) <= 6
+
+
+def test_keeper_prefers_raw_over_jpeg_of_same_resolution():
+    assert rank([fake("a.jpg"), fake("a.arw")])[0].file.path.name == "a.arw"
 
 
 # --- grouping --------------------------------------------------------------

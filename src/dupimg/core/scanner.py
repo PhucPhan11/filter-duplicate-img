@@ -7,8 +7,12 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-IMAGE_EXTENSIONS = frozenset(
-    {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif", ".tif", ".tiff", ".heic", ".heif"}
+# Camera RAW files are compared through the JPEG preview embedded in them.
+RAW_EXTENSIONS = frozenset(
+    {".arw", ".srf", ".sr2", ".cr2", ".cr3", ".nef", ".nrw", ".dng", ".raf", ".orf", ".rw2", ".pef", ".srw"}
+)
+IMAGE_EXTENSIONS = RAW_EXTENSIONS | frozenset(
+    {".jpg", ".jpeg", ".jfif", ".png", ".webp", ".bmp", ".gif", ".tif", ".tiff", ".heic", ".heif"}
 )
 
 Skipped = list[tuple[Path, str]]

@@ -40,6 +40,8 @@ Scanning/hashing and grouping are deliberately separate steps. `run_scan` is slo
 - **Hashing functions must stay top-level and picklable** (`hashing.hash_file`): they run in a `ProcessPoolExecutor` (spawn on Windows). `hash_file` never raises; failures come back in the tuple's error slot and end up in `ScanResult.skipped`, and are not cached.
 - **Below `pipeline._INLINE_LIMIT` files, hashing runs in-process.** Tests monkeypatch this to 0 to exercise the pool, and monkeypatch `pipeline.hash_file` to count calls (which only works on the inline path).
 - **Pixel decoding must match between hashing and thumbnails**: both apply `ImageOps.exif_transpose` and use `img.draft` for JPEG speed. `core/hashing.py` registers the HEIC opener as an import side effect; `ui/thumbnails.py` imports it for that reason.
+- **Camera RAW goes through `hashing._raw_preview`** (rawpy): the embedded JPEG preview is hashed and shown, while width/height report the full sensor size. So a RAW and its same-shot JPEG group together, and `keeper.rank` puts the RAW first. Add new formats in `scanner.RAW_EXTENSIONS` / `IMAGE_EXTENSIONS`; all decoding (hashing and thumbnails) goes through `hashing.load_upright`.
+- **Scripts that call `run_scan` on more than `_INLINE_LIMIT` files must be real files with an `if __name__ == "__main__"` guard**, not stdin/heredocs, or the spawned workers crash.
 - **pHash is stored as hex text in SQLite** because it is an unsigned 64-bit value. The cache lives at `%LOCALAPPDATA%\dupimg\cache.db`, keyed by path with size + mtime_ns validation.
 
 ### Removal safety invariants (`core/actions.py`)

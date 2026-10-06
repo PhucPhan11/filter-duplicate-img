@@ -4,6 +4,8 @@ A Windows desktop app that finds duplicate images, shows each set side by side, 
 
 It catches byte-identical copies and near-duplicates: the same picture resized, recompressed, rotated via EXIF, or saved in another format.
 
+Supported files: JPEG, PNG, WebP, BMP, GIF, TIFF, HEIC, and camera RAW (ARW, CR2, CR3, NEF, DNG, RAF, ORF, RW2, PEF, SRW). RAW files are compared through their embedded preview, so a RAW and the JPEG of the same shot land in one group, with the RAW suggested as the keeper.
+
 ## Run
 
 Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).

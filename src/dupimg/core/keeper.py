@@ -5,8 +5,9 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from .hashing import HashedImage
+from .scanner import RAW_EXTENSIONS
 
-LOSSLESS_EXTENSIONS = frozenset({".png", ".bmp", ".tif", ".tiff"})
+LOSSLESS_EXTENSIONS = RAW_EXTENSIONS | {".png", ".bmp", ".tif", ".tiff"}
 
 
 def _rank_key(image: HashedImage) -> tuple:

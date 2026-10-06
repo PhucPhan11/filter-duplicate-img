@@ -5,22 +5,19 @@ from __future__ import annotations
 from collections import OrderedDict
 from pathlib import Path
 
-from PIL import Image, ImageOps
 from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal
 from PySide6.QtGui import QImage, QPixmap
 
-from ..core import hashing  # noqa: F401  (registers the HEIC opener with Pillow)
+from ..core.hashing import load_upright
 
 _CACHE_LIMIT = 1500
 
 
 def load_thumbnail(path: str, size: int) -> QImage:
-    """Decode with Pillow so HEIC and EXIF rotation behave the same as in hashing."""
-    with Image.open(path) as img:
-        img.draft("RGB", (size, size))
-        upright = ImageOps.exif_transpose(img)
-        upright.thumbnail((size, size))
-        rgba = upright.convert("RGBA")
+    """Decode the same way hashing does, so HEIC, RAW and EXIF rotation all match."""
+    upright = load_upright(path, min_size=(size, size))[0]
+    upright.thumbnail((size, size))
+    rgba = upright.convert("RGBA")
     data = rgba.tobytes()
     return QImage(data, rgba.width, rgba.height, rgba.width * 4, QImage.Format.Format_RGBA8888).copy()
 
